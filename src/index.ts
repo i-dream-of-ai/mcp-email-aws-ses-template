@@ -819,7 +819,7 @@ async function getSendStatistics(env: Env): Promise<unknown> {
   
   // Parse XML for data points
   const dataPoints = [];
-  const dataPointMatches = responseText.matchAll(/<member>(.*?)<\/member>/gs);
+  const dataPointMatches = responseText.matchAll(/<member>(.*?)<\/member>/g);
   
   for (const match of dataPointMatches) {
     const point = match[1];
