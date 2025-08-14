@@ -731,6 +731,11 @@ async function getEmailStatus(args: unknown, env: Env): Promise<unknown> {
 
 // Get sending quota
 async function getSendingQuota(env: Env): Promise<unknown> {
+  // Debug: Check if credentials are available
+  if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY) {
+    throw new Error(`Missing AWS credentials. AWS_ACCESS_KEY_ID: ${env.AWS_ACCESS_KEY_ID ? 'set' : 'missing'}, AWS_SECRET_ACCESS_KEY: ${env.AWS_SECRET_ACCESS_KEY ? 'set' : 'missing'}, AWS_REGION: ${env.AWS_REGION || 'missing'}`);
+  }
+  
   const params = new URLSearchParams({
     'Action': 'GetSendQuota',
     'Version': '2010-12-01'
