@@ -502,7 +502,7 @@ async function hmacSha256(key: ArrayBuffer, data: string): Promise<string> {
 
 async function getSignatureKey(key: string, date: string, region: string, service: string): Promise<ArrayBuffer> {
   const encoder = new TextEncoder();
-  const kDate = await hmacSha256Raw(encoder.encode(`AWS4${key}`), date);
+  const kDate = await hmacSha256Raw(encoder.encode(`AWS4${key}`).buffer, date);
   const kRegion = await hmacSha256Raw(kDate, region);
   const kService = await hmacSha256Raw(kRegion, service);
   return await hmacSha256Raw(kService, 'aws4_request');
