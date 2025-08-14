@@ -407,11 +407,19 @@ async function handleToolCall(request: JsonRpcRequest, env: Env): Promise<JsonRp
     };
 
   } catch (error) {
+    // Return full error details for better debugging
+    const errorDetails = error instanceof Error ? {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    } : { message: String(error) };
+    
     return {
       jsonrpc: '2.0',
       error: {
         code: -32603,
-        message: error instanceof Error ? error.message : 'Tool execution failed'
+        message: error instanceof Error ? error.message : 'Tool execution failed',
+        data: errorDetails  // Include full error details in data field
       },
       id: request.id
     };
@@ -561,7 +569,11 @@ async function sendEmail(args: unknown, env: Env): Promise<unknown> {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`AWS SES API error: ${error}`);
+    const errorObj = new Error(`AWS SES API error (${response.status}): ${error}`);
+    // Add response details to error object
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   const responseText = await response.text();
@@ -635,10 +647,15 @@ async function sendBulkEmail(args: unknown, env: Env): Promise<unknown> {
         });
       }
     } catch (error) {
+      // Include full error details for debugging
+      const errorInfo = error instanceof Error ? 
+        `${error.message}${error.stack ? '\nStack: ' + error.stack : ''}` : 
+        String(error);
+      
       results.push({
         email: recipient.email,
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: errorInfo
       });
     }
   }
@@ -680,7 +697,10 @@ async function getTemplates(env: Env): Promise<unknown> {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`AWS SES templates error: ${error}`);
+    const errorObj = new Error(`AWS SES templates error (${response.status}): ${error}`);
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   const responseText = await response.text();
@@ -734,7 +754,10 @@ async function getSendingQuota(env: Env): Promise<unknown> {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`AWS SES quota error: ${error}`);
+    const errorObj = new Error(`AWS SES quota error (${response.status}): ${error}`);
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   const responseText = await response.text();
@@ -781,7 +804,10 @@ async function getSendStatistics(env: Env): Promise<unknown> {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`AWS SES statistics error: ${error}`);
+    const errorObj = new Error(`AWS SES statistics error (${response.status}): ${error}`);
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   const responseText = await response.text();
@@ -847,7 +873,10 @@ async function verifyEmailIdentity(args: unknown, env: Env): Promise<unknown> {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`AWS SES verify error: ${error}`);
+    const errorObj = new Error(`AWS SES verify error (${response.status}): ${error}`);
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   return {
@@ -888,7 +917,10 @@ async function listVerifiedIdentities(env: Env): Promise<unknown> {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`AWS SES list identities error: ${error}`);
+    const errorObj = new Error(`AWS SES list identities error (${response.status}): ${error}`);
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   const responseText = await response.text();
@@ -964,7 +996,10 @@ async function deleteIdentity(args: unknown, env: Env): Promise<unknown> {
   
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`AWS SES delete identity error: ${error}`);
+    const errorObj = new Error(`AWS SES delete identity error (${response.status}): ${error}`);
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   return {
@@ -1021,7 +1056,10 @@ async function getSuppressionList(args: unknown, env: Env): Promise<unknown> {
         timestamp: new Date().toISOString()
       };
     }
-    throw new Error(`AWS SES suppression list error: ${error}`);
+    const errorObj = new Error(`AWS SES suppression list error (${response.status}): ${error}`);
+    (errorObj as any).statusCode = response.status;
+    (errorObj as any).responseBody = error;
+    throw errorObj;
   }
   
   const responseText = await response.text();
