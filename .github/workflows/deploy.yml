@@ -1,3 +1,6 @@
+# GitHub Actions Workflow
+# Move this file to .github/workflows/deploy.yml to enable automatic deployment
+
 name: Deploy to Cloudflare Workers
 
 on:
