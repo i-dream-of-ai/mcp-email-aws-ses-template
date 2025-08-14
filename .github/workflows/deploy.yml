@@ -52,12 +52,37 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          secrets: |
-            AWS_ACCESS_KEY_ID
-            AWS_SECRET_ACCESS_KEY
+      
+      - name: Set Worker Secrets
+        if: success()
+        run: |
+          # Extract worker name from wrangler.toml
+          WORKER_NAME=$(grep "^name = " wrangler.toml | cut -d'"' -f2)
+          echo "Setting secrets for worker: $WORKER_NAME"
+          
+          # Set secrets if they exist
+          if [ ! -z "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then
+            echo "${{ secrets.AWS_ACCESS_KEY_ID }}" | npx wrangler secret put AWS_ACCESS_KEY_ID --name "$WORKER_NAME"
+          fi
+          
+          if [ ! -z "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then
+            echo "${{ secrets.AWS_SECRET_ACCESS_KEY }}" | npx wrangler secret put AWS_SECRET_ACCESS_KEY --name "$WORKER_NAME"
+          fi
+          
+          if [ ! -z "${{ secrets.SENDGRID_API_KEY }}" ]; then
+            echo "${{ secrets.SENDGRID_API_KEY }}" | npx wrangler secret put SENDGRID_API_KEY --name "$WORKER_NAME"
+          fi
+          
+          if [ ! -z "${{ secrets.RESEND_API_KEY }}" ]; then
+            echo "${{ secrets.RESEND_API_KEY }}" | npx wrangler secret put RESEND_API_KEY --name "$WORKER_NAME"
+          fi
+          
+          if [ ! -z "${{ secrets.MAILGUN_API_KEY }}" ]; then
+            echo "${{ secrets.MAILGUN_API_KEY }}" | npx wrangler secret put MAILGUN_API_KEY --name "$WORKER_NAME"
+          fi
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           
       - name: Notify Deployment Success
         if: success()
