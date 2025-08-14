@@ -781,8 +781,9 @@ async function getSendingQuota(env: Env): Promise<unknown> {
   });
   
   console.log('Response Status:', response.status);
+  // Build headers object for logging
   const responseHeaders: Record<string, string> = {};
-  response.headers.forEach((value, key) => {
+  response.headers.forEach((value: string, key: string) => {
     responseHeaders[key] = value;
   });
   console.log('Response Headers:', JSON.stringify(responseHeaders, null, 2));
