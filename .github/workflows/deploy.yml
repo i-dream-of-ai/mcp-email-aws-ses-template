@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Configure Git defaults
+        run: |
+          git config --global init.defaultBranch main
+          git config --global advice.defaultBranchName false
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
