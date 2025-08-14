@@ -220,6 +220,19 @@ const TOOLS = [
 // Main Worker handler
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+    // DEBUG: Log environment variables (remove in production!)
+    console.log('=== DEBUG: Environment Variables ===');
+    console.log('AWS_ACCESS_KEY_ID exists:', !!env.AWS_ACCESS_KEY_ID);
+    console.log('AWS_ACCESS_KEY_ID length:', env.AWS_ACCESS_KEY_ID?.length || 0);
+    console.log('AWS_ACCESS_KEY_ID first 4 chars:', env.AWS_ACCESS_KEY_ID?.substring(0, 4) || 'N/A');
+    console.log('AWS_SECRET_ACCESS_KEY exists:', !!env.AWS_SECRET_ACCESS_KEY);
+    console.log('AWS_SECRET_ACCESS_KEY length:', env.AWS_SECRET_ACCESS_KEY?.length || 0);
+    console.log('AWS_REGION:', env.AWS_REGION || 'NOT SET');
+    console.log('EMAIL_DEFAULT_FROM:', env.EMAIL_DEFAULT_FROM || 'NOT SET');
+    console.log('MCP_PROTOCOL_VERSION:', env.MCP_PROTOCOL_VERSION || 'NOT SET');
+    console.log('EMAIL_PROVIDER:', env.EMAIL_PROVIDER || 'NOT SET');
+    console.log('=== END DEBUG ===');
+    
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, {
@@ -731,6 +744,12 @@ async function getEmailStatus(args: unknown, env: Env): Promise<unknown> {
 
 // Get sending quota
 async function getSendingQuota(env: Env): Promise<unknown> {
+  // DEBUG: Detailed credential check
+  console.log('=== getSendingQuota DEBUG ===');
+  console.log('AWS_ACCESS_KEY_ID:', env.AWS_ACCESS_KEY_ID ? `${env.AWS_ACCESS_KEY_ID.substring(0, 4)}...` : 'MISSING');
+  console.log('AWS_SECRET_ACCESS_KEY:', env.AWS_SECRET_ACCESS_KEY ? 'SET' : 'MISSING');
+  console.log('AWS_REGION:', env.AWS_REGION || 'MISSING');
+  
   // Debug: Check if credentials are available
   if (!env.AWS_ACCESS_KEY_ID || !env.AWS_SECRET_ACCESS_KEY) {
     throw new Error(`Missing AWS credentials. AWS_ACCESS_KEY_ID: ${env.AWS_ACCESS_KEY_ID ? 'set' : 'missing'}, AWS_SECRET_ACCESS_KEY: ${env.AWS_SECRET_ACCESS_KEY ? 'set' : 'missing'}, AWS_REGION: ${env.AWS_REGION || 'missing'}`);
@@ -744,12 +763,16 @@ async function getSendingQuota(env: Env): Promise<unknown> {
   const url = `https://ses.${env.AWS_REGION}.amazonaws.com/`;
   const body = params.toString();
   
+  console.log('Request URL:', url);
+  console.log('Request Body:', body);
+  
   const headers = {
     'Content-Type': 'application/x-www-form-urlencoded; charset=utf-8',
     'Host': `ses.${env.AWS_REGION}.amazonaws.com`
   };
   
   const signedHeaders = await signAwsRequest('POST', url, headers, body, env);
+  console.log('Signed Headers:', JSON.stringify(signedHeaders, null, 2));
   
   const response = await fetch(url, {
     method: 'POST',
@@ -757,8 +780,12 @@ async function getSendingQuota(env: Env): Promise<unknown> {
     body
   });
   
+  console.log('Response Status:', response.status);
+  console.log('Response Headers:', JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2));
+  
   if (!response.ok) {
     const error = await response.text();
+    console.log('Error Response Body:', error);
     const errorObj = new Error(`AWS SES quota error (${response.status}): ${error}`);
     (errorObj as any).statusCode = response.status;
     (errorObj as any).responseBody = error;
